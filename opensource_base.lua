@@ -239,7 +239,6 @@ function load_visualqadataset(opt, dataType, manager_vocab)
     ---------------------------
     -- start loading features -
     ---------------------------
-    local feature_prefix
     local featureMap = {}
     local featName = 'googlenetFCdense'
 
