@@ -14,7 +14,8 @@ function getFreeGPU()
     return curDeviceID[1]
 end
 
-
+-- Here we specify different learning rate and gradClip for different layers. 
+-- This is *critical* for the performance of BOW. 
 function config_layer_params(opt, params_current, gparams_current, IDX_wordembed)
     local lr_wordembed = opt.lr_wordembed
     local lr_other = opt.lr_other
@@ -31,6 +32,7 @@ function config_layer_params(opt, params_current, gparams_current, IDX_wordembed
     local initialRange_dummy = 0.1
     local moments_dummy = 0.9
 
+    -- Initialize specification of layers.
     local config_layers = {
         lr_rates = {},
         gradientClips = {},
@@ -40,6 +42,7 @@ function config_layer_params(opt, params_current, gparams_current, IDX_wordembed
         initialRange = {}
     }
 
+    -- grad_last is used to add momentum to the gradient.
     local grad_last = {}
     if IDX_wordembed == 1 then
         -- assume wordembed matrix is the params_current[1]
@@ -59,7 +62,7 @@ function config_layer_params(opt, params_current, gparams_current, IDX_wordembed
         end
 
     else
-        for i=1, #params_current do
+        for i = 1, #params_current do
             table.insert(config_layers.lr_rates, lr_other)
             table.insert(config_layers.moments, moments_dummy)
             table.insert(config_layers.gradientClips, gradientClip_dummy)
@@ -79,7 +82,6 @@ end
 ---------------------------------------
 ---- data IO relevant functions--------
 ---------------------------------------
-
 
 function existfile(filename)
     local f=io.open(filename,"r")
@@ -140,10 +142,14 @@ end
 function load_visualqadataset(opt, dataType, manager_vocab)
     -- TODO: only need to load allanswer.txt, question.txt, choice.txt, question_type.txt, answer_type.txt
     -- TODO: two sets: train2014, val2014
+
+    -- Change it to your path. 
     -- local path_imglist = 'datasets/coco_dataset/allimage2014'
+    -- All COCO images.
     local path_imglist = "/gfsai-cached-oregon/ai-group/users/bolei/coco_dataset/allimage2014"
+   
     -- local path_dataset = '/data/vision/oliva/scenedataset/vqa_cache/'
-    --
+    -- VQA question/answer txt files.
     local path_dataset = '/gfsai-cached-oregon/ai-group/users/bolei/vqa_dataset/data_vqadevi_demo'
     -- local path_dataset = './coco_vqa_parse'
     --
