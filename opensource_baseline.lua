@@ -51,7 +51,7 @@ function initial_params()
     local cmd = torch.CmdLine()
     
     -- parameters for general setting
-    cmd:option('--savepath', 'models/')
+    cmd:option('--savepath', '')
 
     -- parameters for the visual feature
     cmd:option('--vfeat', 'googlenetFC')
@@ -68,7 +68,7 @@ function initial_params()
     cmd:option('--epochs', 100)
     cmd:option('--nepoch_lr', 100)
     cmd:option('--decay', 1.2)
-    cmd:option('--embed_word', 512,'the word embedding dimension in baseline')
+    cmd:option('--embed_word', 800,'the word embedding dimension in baseline')
 
     -- parameters for universal learning rate
     cmd:option('--maxgradnorm', 20)
@@ -125,19 +125,18 @@ function runTrainVal()
     for i = 1, opt.epochs do
         print(method .. ' epoch '..i)
         train_epoch(opt, state_train, manager_vocab, context, 'train')
-        train_epoch(opt, state_val, manager_vocab, context, 'val')
-
+        _, _, perfs = train_epoch(opt, state_val, manager_vocab, context, 'val')
         -- Accumulate statistics
-        stat[i] = {acc, acc_match_mostfreq, acc_match_openend, acc_match_multiple}
-     
+        stat[i] = {acc, perfs.most_freq, perfs.openend_overall, perfs.multiple_overall}
         -- Adjust the learning rate 
         adjust_learning_rate(i, opt, config_layers)
     end
 
     -- Select the best train epoch number and combine train2014 and val2014
+    
     if testCombine then
-        nEpoch_best = 1
-        acc_openend_best = 0
+        local nEpoch_best = 1
+        local acc_openend_best = 0
         for i = 1, #stat do
             if stat[i][3]> acc_openend_best then
                 nEpoch_best = i
@@ -149,22 +148,21 @@ function runTrainVal()
         print('best acc is ' .. acc_openend_best)
 
         -- Combine train2014 and val2014
-        local nEpoch_trainAll = 100 or nEpoch_best
+        local nEpoch_trainAll = nEpoch_best
         local state_train, manager_vocab = load_visualqadataset(opt, 'trainval2014', nil)
         print('start training on all data ...')
         local stat = {}
         for i=1, nEpoch_trainAll do
-            print('epoch '..i)
-            train_epoch(opt, state_train, manager_vocab, context, 'train')
-            stat[i] = {acc, acc_match_mostfreq, acc_match_openend, acc_match_multiple}
-
+            print('epoch '..i .. '/' ..nEpoch_trainAll)
+            _, _, perfs = train_epoch(opt, state_train, manager_vocab, context, 'train')
+            stat[i] = {acc, perfs.most_freq, perfs.openend_overall, perfs.multiple_overall}
             adjust_learning_rate(i, opt, config_layers)
 
-            local modelname_curr = opt.save .. '_bestepoch' .. nEpoch_best ..'_going.t7model'
+            local modelname_curr = opt.save 
             save_model(opt, manager_vocab, context, modelname_curr)
         end
         stat[nEpoch_best][1] = acc_openend_best
-        local modelname_curr = opt.save .. '_bestepoch' .. nEpoch_best ..'_final.t7model'
+        local modelname_curr = opt.save 
         save_model(opt, manager_vocab, context, modelname_curr)
     end
 end

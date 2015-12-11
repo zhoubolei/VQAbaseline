@@ -140,19 +140,14 @@ function build_vocab(data, thresh, IDX_singleline, IDX_includeEnd)
 end
 
 function load_visualqadataset(opt, dataType, manager_vocab)
-    -- TODO: only need to load allanswer.txt, question.txt, choice.txt, question_type.txt, answer_type.txt
-    -- TODO: two sets: train2014, val2014
-
     -- Change it to your path. 
     -- local path_imglist = 'datasets/coco_dataset/allimage2014'
     -- All COCO images.
     local path_imglist = "/gfsai-cached-oregon/ai-group/users/bolei/coco_dataset/allimage2014"
    
-    -- local path_dataset = '/data/vision/oliva/scenedataset/vqa_cache/'
     -- VQA question/answer txt files.
-    local path_dataset = '/gfsai-cached-oregon/ai-group/users/bolei/vqa_dataset/data_vqadevi_demo'
-    -- local path_dataset = './coco_vqa_parse'
-    --
+    local path_dataset = '/data/vision/oliva/scenedataset/vqa_cache/'
+    
     local prefix = 'coco_' .. dataType 
     local filename_question = paths.concat(path_dataset, prefix .. '_question.txt')
     local filename_answer = paths.concat(path_dataset, prefix .. '_answer.txt')
@@ -346,7 +341,7 @@ function compute_accuracy(t)
 end
 
 function evaluate_answer(state, manager_vocab, pred_answer, prob_answer, selectIDX)
--- testing case for the VQA devi dataset
+-- testing case for the VQA dataset
     selectIDX = selectIDX or torch.range(1, state.x_answer:size(1))
     local pred_answer_word = {}
     local gt_answer_word = state.data_answer
@@ -362,6 +357,8 @@ function evaluate_answer(state, manager_vocab, pred_answer, prob_answer, selectI
         -- Prediction correct. 
         if manager_vocab.ivocab_map_answer[pred_answer[i]]== gt_answer_word[i] then
             add_count(perfs, "most_freq", 1)
+        else
+            add_count(perfs, "most_freq",0)
         end
 
         -- Estimate using the standard criteria (min(#correct match/3, 1))
@@ -558,9 +555,10 @@ function train_epoch(opt, state, manager_vocab, context, updateIDX)
         acc = -1
     end
     print(updateIDX ..': acc (mostFreq) =' .. acc)
+    local perfs = nil
     if updateIDX ~= 'test' and state.data_allanswer ~= nil then
         -- using the standard evalution criteria of QA virginiaTech
-        local perfs = evaluate_answer(state, manager_vocab, pred_answer, prob_answer)
+        perfs = evaluate_answer(state, manager_vocab, pred_answer, prob_answer)
         print(updateIDX .. ': acc.match mostfreq = ' .. perfs.most_freq)
         print(updateIDX .. ': acc.dataset (OpenEnd) =' .. perfs.openend_overall)
         print(updateIDX .. ': acc.dataset (MultipleChoice) =' .. perfs.multiple_overall)
@@ -568,6 +566,6 @@ function train_epoch(opt, state, manager_vocab, context, updateIDX)
         -- print(perfs)
     end
     print(updateIDX .. ' loss=' .. loss/nBatch)
-    return pred_answer, prob_answer
+    return pred_answer, prob_answer, perfs
 end
 
