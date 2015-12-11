@@ -161,9 +161,6 @@ function runTrainVal()
             local modelname_curr = opt.save 
             save_model(opt, manager_vocab, context, modelname_curr)
         end
-        stat[nEpoch_best][1] = acc_openend_best
-        local modelname_curr = opt.save 
-        save_model(opt, manager_vocab, context, modelname_curr)
     end
 end
 
