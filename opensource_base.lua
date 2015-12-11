@@ -143,9 +143,9 @@ function load_visualqadataset(opt, dataType, manager_vocab)
     -- Change it to your path. 
     -- local path_imglist = 'datasets/coco_dataset/allimage2014'
     -- All COCO images.
-    local path_imglist = "/gfsai-cached-oregon/ai-group/users/bolei/coco_dataset/allimage2014"
    
     -- VQA question/answer txt files.
+    -- Download data_vqa_feat.zip and data_vqa_txt.zip and decompress into this folder
     local path_dataset = '/data/vision/oliva/scenedataset/vqa_cache/'
     
     local prefix = 'coco_' .. dataType 
