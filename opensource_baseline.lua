@@ -100,6 +100,7 @@ function runTrainVal()
     opt.method = method
     opt.save = opt.savepath .. method ..'.t7'
 
+    local stat = {}
     -- load data inside
     if step_trainval then 
         local state_train, manager_vocab = load_visualqadataset(opt, 'trainval2014_train', nil)
@@ -123,7 +124,6 @@ function runTrainVal()
         }
         print(params_current)
         print('start training ...')
-        local stat = {}
         for i = 1, opt.epochs do
             print(method .. ' epoch '..i)
             train_epoch(opt, state_train, manager_vocab, context, 'train')
@@ -176,7 +176,7 @@ function runTrainVal()
         print(params_current)
         
         print('start training on all data ...')
-        local stat = {}
+        stat = {}
         for i=1, nEpoch_trainAll do
             print('epoch '..i .. '/' ..nEpoch_trainAll)
             _, _, perfs = train_epoch(opt, state_train, manager_vocab, context, 'train')
