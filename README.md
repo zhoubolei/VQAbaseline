@@ -1,11 +1,13 @@
 # Simple Baseline for Visual Question Answering
-Simple Baseline for Visual Question Answering
+![teaser results](http://visualqa.csail.mit.edu/framework.jpg)
+We descrive a very simple bag-of-words baseline for visual question answering. The description of the baseline is in the arXiv paper http://arxiv.org/pdf/1512.02167.pdf
+
 
 The code is developed by Bolei Zhou and Yuandong Tian.
 
 Demo is available at http://visualqa.csail.mit.edu/
 
-The description of the code is in the arXiv paper http://arxiv.org/pdf/1512.02167.pdf
+
 
 To train the model using the code, the following data of the VQA dataset are needed:
 - The pre-processed data of text is at http://visualqa.csail.mit.edu/data_vqa_txt.zip
