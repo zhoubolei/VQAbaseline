@@ -52,7 +52,7 @@ function initial_params()
     local cmd = torch.CmdLine()
     
     -- parameters for general setting
-    cmd:option('--savepath', '')
+    cmd:option('--savepath', 'model')
 
     -- parameters for the visual feature
     cmd:option('--vfeat', 'googlenetFC')
@@ -99,7 +99,7 @@ function runTrainVal()
     local step_trainall = true --  step for combining train2014 and val2014
     local opt = initial_params()
     opt.method = method
-    opt.save = opt.savepath .. method ..'.t7'
+    opt.save = paths.concat(opt.savepath, method ..'.t7')
 
     local stat = {}
     -- load data inside
@@ -193,7 +193,7 @@ end
 function runTest()
     --load the pre-trained model then evaluate on the test set then generate the csv file that could be submitted to the evaluation server
     local method = 'BOWIMG'
-    local model_path = 'BOWIMG.t7'
+    local model_path = 'model/BOWIMG.t7'
     local testSet = 'test-dev2015' --'test2015' and 'test-dev2015'
     local opt = initial_params()
     opt.method = method
