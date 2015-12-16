@@ -8,6 +8,7 @@ local file = require 'pl.file'
 paths.dofile('opensource_base.lua')
 paths.dofile('LinearNB.lua')
 
+local debugger = require 'fb.debugger'
 function build_model(opt, manager_vocab) 
     -- function to build up baseline model
     local model
@@ -68,7 +69,7 @@ function initial_params()
     cmd:option('--epochs', 100)
     cmd:option('--nepoch_lr', 100)
     cmd:option('--decay', 1.2)
-    cmd:option('--embed_word', 800,'the word embedding dimension in baseline')
+    cmd:option('--embed_word', 1024,'the word embedding dimension in baseline')
 
     -- parameters for universal learning rate
     cmd:option('--maxgradnorm', 20)
@@ -189,4 +190,45 @@ function runTrainVal()
     end
 end
 
+function runTest()
+    --load the pre-trained model then evaluate on the test set then generate the csv file that could be submitted to the evaluation server
+    local method = 'BOWIMG'
+    local model_path = 'BOWIMG.t7'
+    local testSet = 'test-dev2015' --'test2015' and 'test-dev2015'
+    local opt = initial_params()
+    opt.method = method
+
+    -- load pre-trained model 
+    local f_model = torch.load(model_path)
+    local manager_vocab = f_model.manager_vocab 
+    local model, criterion = build_model(opt, manager_vocab)
+    local paramx, paramdx = model:getParameters()
+    paramx:copy(f_model.paramx)
+
+
+    -- load test data
+    local state_test, _ = load_visualqadataset(opt, testSet, manager_vocab)
+
+    local context = {
+        model = model,
+        criterion = criterion,
+    }
+    -- predict 
+    local pred, prob, perfs = train_epoch(opt, state_test, manager_vocab, context, 'test')
+    
+    -- output to csv file to be submitted to the VQA evaluation server
+    local file_json_openend = 'result/vqa_OpenEnded_mscoco_' .. testSet .. '_'.. method .. '_results.json'
+    local file_json_multiple = 'result/vqa_MultipleChoice_mscoco_' .. testSet .. '_'.. method .. '_results.json'
+    print('output the OpenEnd prediction to JSON file...'..file_json_openend) 
+    local choice = 0   
+    outputJSONanswer(state_test, manager_vocab, prob, file_json_openend, choice)
+    print('output the MultipleChoice prediction to JSON file...'..file_json_multiple) 
+    choice = 1
+    outputJSONanswer(state_test, manager_vocab, prob, file_json_multiple, choice)
+
+    collectgarbage()
+
+end
+
 runTrainVal()
+runTest()

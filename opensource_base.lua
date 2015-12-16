@@ -156,6 +156,7 @@ function load_visualqadataset(opt, dataType, manager_vocab)
     local filename_choice = paths.concat(path_dataset, prefix .. '_choice.txt')
     local filename_question_type = paths.concat(path_dataset, prefix .. '_question_type.txt')
     local filename_answer_type = paths.concat(path_dataset, prefix .. '_answer_type.txt')
+    local filename_questionID = paths.concat(path_dataset, prefix .. '_questionID.txt')
 
     if existfile(filename_allanswer) then
         data_allanswer = file.read(filename_allanswer)
@@ -173,9 +174,18 @@ function load_visualqadataset(opt, dataType, manager_vocab)
         data_answer_type = file.read(filename_answer_type)
         data_answer_type = stringx.split(data_answer_type, '\n')
     end
-    print("Load answer file = " .. filename_answer)
-    local data_answer = file.read(filename_answer)
-    local data_answer_split = stringx.split(data_answer,'\n')
+    if  existfile(filename_questionID) then
+        data_questionID = file.read(filename_questionID)
+        data_questionID = stringx.split(data_questionID,'\n')
+    end
+
+    local data_answer
+    local data_answer_split
+    if existfile(filename_answer) then
+        print("Load answer file = " .. filename_answer)
+        data_answer = file.read(filename_answer)
+        data_answer_split = stringx.split(data_answer,'\n')
+    end
 
     print("Load question file = " .. filename_question)
     local data_question = file.read(filename_question)
@@ -191,7 +201,6 @@ function load_visualqadataset(opt, dataType, manager_vocab)
         manager_vocab_ = manager_vocab
     end
     
-    print(string.format("loading textfile %s, size of data=%d", filename_answer, #data_answer_split))
     local imglist = load_filelist(filename_imglist)
     local nSample = #imglist
     -- We can choose to run the first few answers.
@@ -211,11 +220,13 @@ function load_visualqadataset(opt, dataType, manager_vocab)
     for i = 1, nSample do
         local words = stringx.split(data_question_split[i])
         -- Answers
-        local answer = data_answer_split[i]
-        if manager_vocab_.vocab_map_answer[answer] == nil then
-            x_answer[i] = -1
-        else
-            x_answer[i] = manager_vocab_.vocab_map_answer[answer]
+        if existfile(filename_answer) then
+            local answer = data_answer_split[i]
+            if manager_vocab_.vocab_map_answer[answer] == nil then
+                x_answer[i] = -1
+            else
+                x_answer[i] = manager_vocab_.vocab_map_answer[answer]
+            end
         end
         -- Questions
         for j = 1, opt.seq_length do
@@ -241,16 +252,18 @@ function load_visualqadataset(opt, dataType, manager_vocab)
 
     -- Possible combinations of data loading
     local loading_spec = {
-        trainval2014 = { train = true, val = true },
-        trainval2014_train = { train = true, val = true },
-        trainval2014_val = { train = false, val = true },
-        train2014 = { train = true, val = false },
-        val2014 = { train = false, val = true }
+        trainval2014 = { train = true, val = true, test = false },
+        trainval2014_train = { train = true, val = true, test = false },
+        trainval2014_val = { train = false, val = true, test = false },
+        train2014 = { train = true, val = false, test = false },
+        val2014 = { train = false, val = true, test = false },
+        test2015 = { train = false, val = false, test = true }
     }
-
+    loading_spec['test-dev2015'] = { train = false, val = false, test = true }
     local feature_prefixSet = {
         train = paths.concat(path_dataset, 'coco_train2014_' .. featName), 
-        val = paths.concat(path_dataset, 'coco_val2014_' .. featName)
+        val = paths.concat(path_dataset, 'coco_val2014_' .. featName),
+        test = paths.concat(path_dataset,'coco_test2015_' .. featName)
     }
 
     for k, feature_prefix in pairs(feature_prefixSet) do
@@ -280,7 +293,8 @@ function load_visualqadataset(opt, dataType, manager_vocab)
         data_choice = data_choice, 
         data_question_type = data_question_type, 
         data_answer_type = data_answer_type, 
-        featureMap_question = featureMap_question
+        data_questionID = data_questionID
+
     }
     
     return _state, manager_vocab_
@@ -407,6 +421,42 @@ function evaluate_answer(state, manager_vocab, pred_answer, prob_answer, selectI
 
     -- Compute accuracy
     return compute_accuracy(perfs)
+end
+
+function outputJSONanswer(state, manager_vocab, prob, file_json, choice)
+    -- Dump the prediction result to csv file
+    local f_json = io.open(file_json,'w')
+    f_json:write('[')
+    
+    for i = 1, prob:size(1) do
+        local choices = stringx.split(state.data_choice[i], ',')
+        local score_choices = torch.zeros(#choices):fill(-1000000)
+        for j=1, #choices do
+            local IDX_pred = manager_vocab.vocab_map_answer[choices[j]]
+            if IDX_pred ~= nil then
+                local score = prob[{i, IDX_pred}]
+                if score ~= nil then
+                    score_choices[j] = score
+                end
+            end
+        end
+        local val_max,IDX_max = torch.max(score_choices,1)
+        local val_max_open,IDX_max_open = torch.max(prob[i],1)
+        local word_pred_answer_multiple = choices[IDX_max[1]]
+        local word_pred_answer_openend = manager_vocab.ivocab_map_answer[IDX_max_open[1]]
+        local answer_pred = word_pred_answer_openend
+        if choice == 1 then
+            answer_pred = word_pred_answer_multiple
+        end
+        local questionID = state.data_questionID[i]
+        f_json:write('{"answer": "' .. answer_pred .. '","question_id": ' .. questionID .. '}')
+        if i< prob:size(1) then
+            f_json:write(',')
+        end
+    end
+    f_json:write(']')
+    f_json:close()
+
 end
 
 function train_epoch(opt, state, manager_vocab, context, updateIDX)
