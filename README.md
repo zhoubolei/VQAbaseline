@@ -1,6 +1,6 @@
 # Simple Baseline for Visual Question Answering
 
-We descrive a very simple bag-of-words baseline for visual question answering. The description of the baseline is in the arXiv paper http://arxiv.org/pdf/1512.02167.pdf. The code is developed by Bolei Zhou and Yuandong Tian.
+We descrive a very simple bag-of-words baseline for visual question answering. The description of the baseline is in the arXiv paper http://arxiv.org/pdf/1512.02167.pdf. The code is developed by [Bolei Zhou](http://people.csail.mit.edu/bzhou/) and [Yuandong Tian](http://yuandong-tian.com/).
 
 ![results](http://visualqa.csail.mit.edu/example.jpg)
 
