@@ -15,6 +15,6 @@ Contact Bolei Zhou (zhoubolei@gmail.com) if you have any questions.
 
 Please cite our arXiv note if you use our code:
 
-  B. Zhou, Y. Tian, S. Suhkbaatar, A. Szlam, R. Fergus
+  B. Zhou, Y. Tian, S. Suhkbaatar, A. Szlam, R. Fergus.
   Simple Baseline for Visual Question Answering.
   arXiv:1512.02167
