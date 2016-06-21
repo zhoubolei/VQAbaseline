@@ -1,6 +1,7 @@
 require 'paths'
 require 'cunn'
 require 'nn'
+require 'cutorch'
 
 local stringx = require 'pl.stringx'
 local file = require 'pl.file'
@@ -8,7 +9,7 @@ local file = require 'pl.file'
 paths.dofile('opensource_base.lua')
 paths.dofile('LinearNB.lua')
 
-local debugger = require 'fb.debugger'
+--local debugger = require 'fb.debugger'
 function build_model(opt, manager_vocab) 
     -- function to build up baseline model
     local model
@@ -111,7 +112,6 @@ function runTrainVal()
         local params_current, gparams_current = model:parameters()
 
         local config_layers, grad_last = config_layer_params(opt, params_current, gparams_current, 1)
-
     -- Save variables into context so that train_epoch could use.
         local context = {
             model = model,
@@ -163,7 +163,7 @@ function runTrainVal()
         local params_current, gparams_current = model:parameters()
 
         local config_layers, grad_last = config_layer_params(opt, params_current, gparams_current, 1)
-
+        
         local context = {
             model = model,
             criterion = criterion,
