@@ -11,6 +11,8 @@ To train the model using the code, the following data of the VQA dataset are nee
 - The pre-processed data of text is at http://visualqa.csail.mit.edu/data_vqa_txt.zip
 - The googlenet feature of all the COCO images is at http://visualqa.csail.mit.edu/data_vqa_feat.zip
 
+The pre-trained model used in the paper is at http://visualqa.csail.mit.edu/coco_qadevi_BOWIMG_bestepoch93_final.t7model. It has 55.89 on the Open-Ended and 61.69 on Multiple-Choice for the test-standard of COCO VQA dataset.
+
 Contact Bolei Zhou (zhoubolei@gmail.com) if you have any questions.
 
 Please cite our arXiv note if you use our code:

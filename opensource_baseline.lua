@@ -35,7 +35,6 @@ function runTrainVal()
         local params_current, gparams_current = model:parameters()
 
         local config_layers, grad_last = config_layer_params(opt, params_current, gparams_current, 1)
-
     -- Save variables into context so that train_epoch could use.
         local context = {
             model = model,
@@ -87,7 +86,7 @@ function runTrainVal()
         local params_current, gparams_current = model:parameters()
 
         local config_layers, grad_last = config_layer_params(opt, params_current, gparams_current, 1)
-
+        
         local context = {
             model = model,
             criterion = criterion,
