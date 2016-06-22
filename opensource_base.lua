@@ -2,18 +2,6 @@ local debugger = require 'fb.debugger'
 local stringx = require 'pl.stringx'
 local file = require 'pl.file'
 
-function getFreeGPU()
-    -- select the most available GPU to train
-    local nDevice = cutorch.getDeviceCount()
-    local memSet = torch.Tensor(nDevice)
-    for i=1, nDevice do
-        local tmp, _ = cutorch.getMemoryUsage(i)
-        memSet[i] = tmp
-    end
-    local _, curDeviceID = torch.max(memSet,1)
-    return curDeviceID[1]
-end
-
 -- Here we specify different learning rate and gradClip for different layers. 
 -- This is *critical* for the performance of BOW. 
 function config_layer_params(opt, params_current, gparams_current, IDX_wordembed)
@@ -146,7 +134,7 @@ function load_visualqadataset(opt, dataType, manager_vocab)
    
     -- VQA question/answer txt files.
     -- Download data_vqa_feat.zip and data_vqa_txt.zip and decompress into this folder
-    local path_dataset = '/data/vision/oliva/scenedataset/vqa_cache/'
+    local path_dataset = '/data/local/vqa_opensource'
     
     local prefix = 'coco_' .. dataType 
     local filename_question = paths.concat(path_dataset, prefix .. '_question.txt')
