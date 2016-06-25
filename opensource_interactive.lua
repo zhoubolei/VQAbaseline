@@ -38,6 +38,14 @@ function rankPrepare()
     local testSet = 'test-dev2015' --'test2015' and 'test-dev2015'
     local state, _ = load_visualqadataset(opt, testSet, manager_vocab)
 
+    local x_rep = rank_context.rankWord_M.new():resize(state.x_question:size(1), manager_vocab.nvocab_question):zero()
+    for i = 1, state.x_question:size(1) do
+        x_rep[i]:copy(bagofword(manager_vocab, state.x_question[i]))
+    end
+    -- nvocab_answer * #question
+    rank_context.rankQuestion_M = torch.mm(rank_context.rankWord_M, x_rep:transpose(1, 2))
+    rank_context.questions = state.data_question
+
     rank_context.imglist = { }
     rank_context.inv_imglist = { }
 
@@ -114,6 +122,27 @@ function rankImage(answer, topn)
     return res 
 end
 
+function rankQuestion(answer, topn)
+    local manager_vocab = rank_context.context.manager_vocab
+ 
+    -- Given the answer, rank the image most relevant to the answer.
+    -- Convert the answer to idx and return topn words
+    if answer:sub(1, 1) == '"' then answer = answer:sub(2, -2) end
+    local answerid = manager_vocab.vocab_map_answer[answer]
+    if answerid == nil then return end
+
+    local score = rank_context.rankQuestion_M[answerid]:clone():squeeze()
+    local sortedScore, sortedIndices = score:sort(1, true)
+
+    local res = { }
+    for i = 1, topn do
+        local idx = sortedIndices[i]
+        table.insert(res, { idx = idx, question = rank_context.questions[idx], score = sortedScore[i] })
+    end
+
+    return res 
+end
+
 local function smart_split(s, quotes)
     quotes = quotes or { ['"'] = true }
     local res = { }
@@ -140,6 +169,7 @@ end
 
 local commands = {
     rankw = {
+        -- Given answer, rank words.
         exec = function(tokens)
             local topn = tonumber(tokens[3]) or 5
             local res = rankWord(tokens[2], topn)
@@ -154,6 +184,23 @@ local commands = {
             return success, s
         end,
         help = "\"rankw answer 5\" will rank the word and show top5 question words that give the answer. If 5 is not given, default to top5. If the answer contains white space, use quote to separate."
+    },
+    rankq = {
+        -- Given answer, rank sentence.
+        exec = function(tokens)
+            local topn = tonumber(tokens[3]) or 5
+            local res = rankQuestion(tokens[2], topn)
+            local success = false
+            local s = ""
+            if res then
+                for i, v in pairs(res) do
+                    s = s .. string.format("[%d]: %s (%.2f)", i, v.question, v.score) .. "\n"
+                end
+                success = true
+            end
+            return success, s
+        end,
+        help = "\"rankq answer 5\" will rank the question from test set and show top5 that give the answer. If 5 is not given, default to top5. If the answer contains white space, use quote to separate."
     },
     ranki = {
         exec = function(tokens) 
